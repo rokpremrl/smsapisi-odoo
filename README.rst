@@ -13,7 +13,7 @@ Go to: Settings > Technical > IAP > IAP Accounts
 When you set the Provider of an IAP account to *smsapi.si*, the following
 section will appear.
 
-.. figure:: https://github.com/rokpremrl/smsapisi_connector/static/img/iap_account.png
+.. figure:: https://github.com/rokpremrl/smsapisi_connector/blob/17.0/static/img/iap_account.png?raw=true
    :alt: alt text
 
 | Service Name must be *sms*. *Username*, *Password* and *From* fields
