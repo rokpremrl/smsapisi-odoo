@@ -69,7 +69,7 @@ class IapAccount(models.Model):
             return
 
         try:
-            api_credits = iap_account.get_current_credit_balance()
+            api_credits = iap_account.get_credits('sms')
         except UserWarning as e:
             _logger.warning(f"SMSapi.si returned an error while attempting to get current credit balance: {e}")
         except Exception as e:
@@ -95,15 +95,9 @@ class IapAccount(models.Model):
         return params
 
     def get_current_credit_balance(self):
-
-        response = requests.get(
-            SMS_API_SI_CREDIT_BALANCE_URL,
-            params=self._prepare_sms_api_si_credit_check_params(),
-        )
-
-        response_content = response.content.decode('utf-8')
-        _logger.debug(f"smsapi.si credit balance check responded with: {response_content}")
-
+        # custom function to calculate credit balance - raises error on error and is used for our test_connection function
+        response_content = self.get_credits_from_smsapisi()
+        
         if response_content[:2] != "-1":
             current_credit_balance = int(float(response_content))
             return current_credit_balance
@@ -111,6 +105,38 @@ class IapAccount(models.Model):
             error_code = response_content.split('##')[1]
             error_msg = self.get_sms_api_si_error(error_code)
             raise UserWarning(error_msg)
+
+
+    @api.model
+    def get_credits(self, service_name):
+        # overrides odoo function to call smsapisi and return number of credits - returns -1 on error
+        iap_account = self.get(service_name, force_create=False)
+        if service_name != 'sms' or not self.env['sms.sms']._is_sent_with_sms_api():
+            return super().get_credits()
+
+        response_content = iap_account.get_credits_from_smsapisi()
+
+        if response_content[:2] != "-1":
+            current_credit_balance = int(float(response_content))
+            return current_credit_balance
+        else:
+            error_code = response_content.split('##')[1]
+            error_msg = self.get_sms_api_si_error(error_code)
+            _logger.warning(error_msg)
+            return -1
+
+
+    def get_credits_from_smsapisi(self):
+        # calls smsapisi and directly returns the response content
+        response = requests.get(
+            SMS_API_SI_CREDIT_BALANCE_URL,
+            params=self._prepare_sms_api_si_credit_check_params(),
+        )
+
+        response_content = response.content.decode('utf-8')
+        _logger.debug(f"smsapi.si credit balance check responded with: {response_content}")
+        return response_content
+
 
     @api.model
     def _get_sms_account(self):

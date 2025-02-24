@@ -4,6 +4,7 @@ from odoo import api, fields, models, tools, _
 from odoo.addons.phone_validation.tools import phone_validation
 import logging
 import requests
+from odoo.exceptions import ValidationError
 from odoo.addons.sms.tools.sms_api import SmsApi
 
 _logger = logging.getLogger(__name__)
@@ -55,9 +56,8 @@ class Sms(models.Model):
                 _logger.warning('Sent batch %s SMS: %s: failed with exception %s', len(self.ids), self.ids, e)
                 if raise_exception:
                     raise
-                self._postprocess_iap_sent_sms(
-                    [{'res_id': sms.id, 'state': 'server_error'} for sms in self],
-                    unlink_failed=unlink_failed, unlink_sent=unlink_sent)
+                results = [{'uuid': sms.uuid, 'state': 'server_error'} for sms in self]
+                self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
             else:
                 _logger.info('Send batch %s SMS: %s: gave %s', len(self.ids), self.ids, iap_results)
                 self._postprocess_iap_sent_sms(iap_results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
@@ -65,6 +65,7 @@ class Sms(models.Model):
             return super()._send(unlink_failed=unlink_failed, unlink_sent=unlink_sent, raise_exception=raise_exception)
         
 
+    @api.model
     def _is_sent_with_sms_api(self):
         return self.env['iap.account']._get_sms_account().provider == "sms_api_si"
 
@@ -73,15 +74,23 @@ class Sms(models.Model):
         # Try to return same error code like odoo
         # list is here: self.IAP_TO_SMS_STATE
         if not self.number:
-           return "wrong_number_format"
+            self.sms_api_error = "Number missing"
+            raise ValidationError(self.env['iap.account'].get_sms_api_si_error('9'))
 
         iap_account_sms = self.env['iap.account']._get_sms_account()
 
         # return format: ID##SMS_PRICE##FROM##TO --- example: 123##0.03##040123456##040654321
         # in case of error: -1##ERROR##FROM##TO
+        try:
+            sms_api_si_params = self._prepare_sms_api_si_params(iap_account_sms)
+        except:
+            number_warning = _("The number has to start with a country code e.g. +386")
+            self.sms_api_error = number_warning
+            raise ValidationError(self.env['iap.account'].get_sms_api_si_error('9'))
+        
         response = requests.get(
             SMS_API_SI_URL,
-            params=self._prepare_sms_api_si_params(iap_account_sms),
+            params=sms_api_si_params,
         )
 
         response_content = response.content.decode('utf-8')
@@ -97,7 +106,7 @@ class Sms(models.Model):
         _logger.warning(f"Failed to send SMS: {error_msg}")
 
         self.sms_api_error = error_msg
-        return error_msg
+        raise ValidationError(error_msg)
 
     def _split_batch(self):
         if self._is_sent_with_sms_api():
