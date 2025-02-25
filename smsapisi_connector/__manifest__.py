@@ -4,7 +4,7 @@
     'summary': "Send SMS with SMSapi.si",
     'author': "Guru d.o.o.",
     'website': "https://www.guru.si/",
-    'license': 'AGPL-3',
+    'license': 'LGPL-3',
     'category': 'Technical',
     'version': '17.0.1.2.0',
     'depends': ['base', "sms", "iap_alternative_provider", "phone_validation", "sign"],
