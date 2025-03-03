@@ -28,10 +28,9 @@ class IapAccount(models.Model):
         '12': {'name': _('Sender number not confirmed.'), 'description': _('Add the sender\'s number in your profile on the SMSapi.si page and confirm it according to the instructions.')},
     }
     
-    provider = fields.Selection(
-        selection_add=[("sms_api_si", "smsapi.si")],
-        ondelete={"sms_api_si": "cascade"},
-    )
+    provider = fields.Selection([("odoo", "Odoo IAP"), ("sms_api_si", "smsapi.si")],
+                                ondelete={"sms_api_si": "cascade"}, required=True, default="odoo")
+
 
     sms_api_username = fields.Char(help="SMSapi.si username")
     sms_api_password = fields.Char(help="SMSapi.si password")

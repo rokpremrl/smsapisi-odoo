@@ -7,7 +7,7 @@
     'license': 'LGPL-3',
     'category': 'Technical',
     'version': '17.0.1.2.0',
-    'depends': ['base', "sms", "iap_alternative_provider", "phone_validation", "sign"],
+    'depends': ['base', "sms", "iap", "phone_validation", "sign"],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests']
     },
