@@ -6,7 +6,7 @@
     'website': "https://www.guru.si/",
     'license': 'AGPL-3',
     'category': 'Technical',
-    'version': '16.0.1.0.0',
+    'version': '16.0.1.0.1',
     'depends': ['base', "sms", "iap_alternative_provider", "phone_validation"],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests']
