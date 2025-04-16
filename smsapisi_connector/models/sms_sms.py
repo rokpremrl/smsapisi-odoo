@@ -25,7 +25,7 @@ class Sms(models.Model):
             "un": iap_account.sms_api_username,
             "ps": iap_account.sms_api_password,
             "from": iap_account.sms_api_from,
-            "to": self.number,
+            "to": parsed_number.national_number,
             "cc": parsed_number.country_code,
             "m": self.body,
             'unicode': '1',

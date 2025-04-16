@@ -6,7 +6,7 @@
     'website': "https://www.guru.si/",
     'license': 'LGPL-3',
     'category': 'Technical',
-    'version': '17.0.1.2.0',
+    'version': '17.0.1.2.1',
     'depends': ['base', "sms", "iap", "phone_validation", "sign"],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests']
